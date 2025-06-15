@@ -40,7 +40,7 @@ export function ModelSelector({ models }: ModelSelectorProps) {
   const [value, setValue] = useState('')
 
   useEffect(() => {
-    const savedModel = getCookie('selectedModel')
+    const savedModel = getCookie('selectedModel') || 'openai:gpt-4.1-mini'
     if (savedModel) {
       try {
         const model = JSON.parse(savedModel) as Model
@@ -56,7 +56,7 @@ export function ModelSelector({ models }: ModelSelectorProps) {
     const newValue = id === value ? '' : id
     setValue(newValue)
     
-    const selectedModel = models.find(model => createModelId(model) === newValue)
+    const selectedModel = models.find(model => createModelId(model) === 'openai:gpt-4.1-mini')
     if (selectedModel) {
       setCookie('selectedModel', JSON.stringify(selectedModel))
     } else {
@@ -71,7 +71,7 @@ export function ModelSelector({ models }: ModelSelectorProps) {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      {/* <PopoverTrigger asChild>
+      <PopoverTrigger asChild>
         <Button
           variant="outline"
           role="combobox"
@@ -97,9 +97,9 @@ export function ModelSelector({ models }: ModelSelectorProps) {
           )}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
-      </PopoverTrigger> */}
+      </PopoverTrigger>
       <PopoverContent className="w-72 p-0" align="start">
-        {/* <Command>
+        <Command>
           <CommandInput placeholder="Search models..." />
           <CommandList>
             <CommandEmpty>No model found.</CommandEmpty>
@@ -137,7 +137,7 @@ export function ModelSelector({ models }: ModelSelectorProps) {
               </CommandGroup>
             ))}
           </CommandList>
-        </Command> */}
+        </Command>
       </PopoverContent>
     </Popover>
   )

@@ -23,13 +23,13 @@ function useSearchTracker() {
     // Get current search count from localStorage (client-side tracking)
     const count = parseInt(localStorage.getItem('free_searches') || '0')
     setSearchCount(count)
-    setIsTrialExpired(count >= 2)
+    setIsTrialExpired(count >= 10)
   }, [])
 
   const trackSearch = async () => {
     const newCount = searchCount + 1
     
-    if (newCount > 2) {
+    if (newCount > 10) {
       // Redirect to login if exceeded free searches
       router.push('/auth/login')
       return false
@@ -50,7 +50,7 @@ function useSearchTracker() {
 
     setSearchCount(newCount)
     
-    if (newCount >= 2) {
+    if (newCount >= 10) {
       setIsTrialExpired(true)
     }
 

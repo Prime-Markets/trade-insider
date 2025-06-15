@@ -71,7 +71,7 @@ export async function middleware(request: NextRequest) {
 
         if (isSearchRequest) {
           // If user has already used their 2 free searches, redirect to login
-          if (searchCount >= 2) {
+          if (searchCount >= 10) {
             const loginUrl = new URL('/auth/login', request.url)
             return NextResponse.redirect(loginUrl)
           }

@@ -10,7 +10,7 @@ export function SearchModeToggle() {
   const [isSearchMode, setIsSearchMode] = useState(true)
 
   useEffect(() => {
-    const savedMode = getCookie('search-mode')
+    const savedMode = getCookie('search-mode') || true
     if (savedMode !== null) {
       setIsSearchMode(savedMode === 'true')
     } else {
