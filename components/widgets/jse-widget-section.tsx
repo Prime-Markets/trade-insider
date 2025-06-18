@@ -71,5 +71,5 @@ export function JSEWidgetSection({ content, theme = 'light' }: JSEWidgetSectionP
         )}
       </div>
     </div>
-  )
+  ) 
 }
