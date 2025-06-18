@@ -55,7 +55,7 @@
       <CollapsibleMessage
         role="assistant"
         isCollapsible={true}
-        header={header}
+        // header={header}
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         showIcon={false}

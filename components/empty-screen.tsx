@@ -3,38 +3,39 @@ import { ArrowRight } from 'lucide-react'
 
 const exampleMessages = [
   {
-    heading: 'What are the top AI stocks to watch?',
-    message: 'What are the top AI stocks to watch in 2025?'
+    heading: 'Top JSE stocks to watch',
+    message: 'What are the top-performing JSE stocks to watch in 2025?'
   },
   {
-    heading: 'USD/EUR forex outlook',
-    message: 'What\'s the current USD/EUR exchange rate and outlook?'
+    heading: 'South African Rand outlook',
+    message: 'What is the outlook for the South African Rand (ZAR) in 2025?'
   },
   {
-    heading: 'Bitcoin vs Ethereum analysis',
-    message: 'Compare Bitcoin vs Ethereum as investments right now'
+    heading: 'Sasol stock analysis',
+    message: 'Is now a good time to invest in Sasol stock?'
   },
   {
-    heading: 'Best dividend stocks 2025',
-    message: 'What are the best dividend-paying stocks for 2025?'
+    heading: 'Best dividend stocks on JSE',
+    message: 'Which JSE-listed stocks offer the best dividends in 2025?'
   },
   {
-    heading: 'Crypto market trends',
-    message: 'What are the major cryptocurrency trends to watch?'
+    heading: 'JSE market trends',
+    message: 'What are the major trends shaping the JSE this year?'
   },
   {
-    heading: 'Tesla stock analysis',
-    message: 'Should I buy Tesla stock at current prices?'
+    heading: 'Naspers vs Prosus',
+    message: 'How do Naspers and Prosus compare as investments?'
   },
   {
-    heading: 'Japanese Yen strength',
-    message: 'Why is the Japanese Yen strengthening against the dollar?'
+    heading: 'Mining stocks outlook',
+    message: 'What is the outlook for mining stocks on the JSE?'
   },
   {
-    heading: 'Tech stock earnings preview',
-    message: 'Which tech companies have earnings this week?'
+    heading: 'JSE earnings preview',
+    message: 'Which major JSE companies are reporting earnings this week?'
   }
 ]
+
 export function EmptyScreen({
   submitMessage,
   className

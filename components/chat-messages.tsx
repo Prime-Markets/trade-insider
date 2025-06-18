@@ -114,6 +114,22 @@ export function ChatMessages({
     }))
   }
 
+  // Helper function to determine if a message is complete
+  const isMessageComplete = (message: Message, sectionIndex: number, messageIndex: number) => {
+    // If not loading, all messages are complete
+    if (!isLoading) return true
+    
+    // If this is not the last section, the message is complete
+    if (sectionIndex < sections.length - 1) return true
+    
+    // If this is the last section but not the last assistant message, it's complete
+    const lastSection = sections[sections.length - 1]
+    if (messageIndex < lastSection.assistantMessages.length - 1) return true
+    
+    // The last assistant message in the last section is incomplete if we're loading
+    return false
+  }
+
   return (
     <div
       id="scroll-container"
@@ -149,12 +165,13 @@ export function ChatMessages({
                 addToolResult={addToolResult}
                 onUpdateMessage={onUpdateMessage}
                 reload={reload}
+                isComplete={true} // User messages are always complete
               />
               {showLoading && <Spinner />}
             </div>
 
             {/* Assistant messages */}
-            {section.assistantMessages.map(assistantMessage => (
+            {section.assistantMessages.map((assistantMessage, messageIndex) => (
               <div key={assistantMessage.id} className="flex flex-col gap-4">
                 <RenderMessage
                   message={assistantMessage}
@@ -166,6 +183,7 @@ export function ChatMessages({
                   addToolResult={addToolResult}
                   onUpdateMessage={onUpdateMessage}
                   reload={reload}
+                  isComplete={isMessageComplete(assistantMessage, sectionIndex, messageIndex)}
                 />
               </div>
             ))}

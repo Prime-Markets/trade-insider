@@ -5,6 +5,7 @@ import { ReasoningSection } from './reasoning-section'
 import RelatedQuestions from './related-questions'
 import { ToolSection } from './tool-section'
 import { UserMessage } from './user-message'
+import { JSEWidgetSection } from './widgets/jse-widget-section'
 
 interface RenderMessageProps {
   message: Message
@@ -19,6 +20,8 @@ interface RenderMessageProps {
     messageId: string,
     options?: ChatRequestOptions
   ) => Promise<string | null | undefined>
+  isComplete?: boolean
+  theme?: 'light' | 'dark' 
 }
 
 export function RenderMessage({
@@ -30,7 +33,9 @@ export function RenderMessage({
   chatId,
   addToolResult,
   onUpdateMessage,
-  reload
+  reload,
+  isComplete = true,
+  theme = 'light'
 }: RenderMessageProps) {
   const relatedQuestions = useMemo(
     () =>
@@ -39,8 +44,18 @@ export function RenderMessage({
       ),
     [message.annotations]
   )
+  
+  const fullTextContent = useMemo(() => {
+    if (message.role === 'user') {
+      return typeof message.content === 'string' ? message.content : ''
+    }
+    
+    return message.parts
+      ?.filter(part => part.type === 'text')
+      .map(part => (part as any).text)
+      .join(' ') || ''
+  }, [message])
 
-  // Render for manual tool call
   const toolData = useMemo(() => {
     const toolAnnotations =
       (message.annotations?.filter(
@@ -74,7 +89,6 @@ export function RenderMessage({
     return Array.from(toolDataMap.values())
   }, [message.annotations])
 
-  // Extract the unified reasoning annotation directly.
   const reasoningAnnotation = useMemo(() => {
     const annotations = message.annotations as any[] | undefined
     if (!annotations) return null
@@ -84,8 +98,6 @@ export function RenderMessage({
     )
   }, [message.annotations])
 
-  // Extract the reasoning time and reasoning content from the annotation.
-  // If annotation.data is an object, use its fields. Otherwise, default to a time of 0.
   const reasoningTime = useMemo(() => {
     if (!reasoningAnnotation) return 0
     if (
@@ -107,37 +119,21 @@ export function RenderMessage({
     )
   }
 
-  // New way: Use parts instead of toolInvocations
   return (
     <>
-      {toolData.map(tool => (
-        <ToolSection
-          key={tool.toolCallId}
-          tool={tool}
-          isOpen={getIsOpen(tool.toolCallId)}
-          onOpenChange={open => onOpenChange(tool.toolCallId, open)}
-          addToolResult={addToolResult}
-        />
-      ))}
-      {message.parts?.map((part, index) => {
-        // Check if this is the last part in the array
-        const isLastPart = index === (message.parts?.length ?? 0) - 1
+      {/* Show JSE widgets first for the entire message content */}
+      {isComplete && (
+        <JSEWidgetSection content={fullTextContent} theme={theme} />
+      )}
 
+      {/* Filter out tool-invocation parts and render only text and reasoning */}
+      {message.parts?.map((part, index) => {
+        const isLastPart = index === (message.parts?.length ?? 0) - 1
         switch (part.type) {
           case 'tool-invocation':
-            return (
-              <ToolSection
-                key={`${messageId}-tool-${index}`}
-                tool={part.toolInvocation}
-                isOpen={getIsOpen(part.toolInvocation.toolCallId)}
-                onOpenChange={open =>
-                  onOpenChange(part.toolInvocation.toolCallId, open)
-                }
-                addToolResult={addToolResult}
-              />
-            )
+            // Skip tool invocations here - they'll be rendered at the end
+            return null
           case 'text':
-            // Only show actions if this is the last part and it's a text part
             return (
               <AnswerSection
                 key={`${messageId}-text-${index}`}
@@ -145,13 +141,13 @@ export function RenderMessage({
                 isOpen={getIsOpen(messageId)}
                 onOpenChange={open => onOpenChange(messageId, open)}
                 chatId={chatId}
-                showActions={isLastPart}
+                showActions={isLastPart && isComplete}
                 messageId={messageId}
                 reload={reload}
               />
             )
           case 'reasoning':
-            return (
+            return isComplete ? (
               <ReasoningSection
                 key={`${messageId}-reasoning-${index}`}
                 content={{
@@ -161,13 +157,29 @@ export function RenderMessage({
                 isOpen={getIsOpen(messageId)}
                 onOpenChange={open => onOpenChange(messageId, open)}
               />
+            ) : (
+              <div key={`${messageId}-reasoning-loading-${index}`}>
+                Thinking...
+              </div>
             )
-          // Add other part types as needed
           default:
             return null
         }
       })}
-      {relatedQuestions && relatedQuestions.length > 0 && (
+      
+      {/* Show tool data at the end when complete */}
+      {isComplete && toolData.map(tool => (
+        <ToolSection
+          key={tool.toolCallId}
+          tool={tool}
+          isOpen={getIsOpen(tool.toolCallId)}
+          onOpenChange={open => onOpenChange(tool.toolCallId, open)}
+          addToolResult={addToolResult}
+        />
+      ))}
+      
+      {/* Show related questions */}
+      {isComplete && relatedQuestions && relatedQuestions.length > 0 && (
         <RelatedQuestions
           annotations={relatedQuestions as JSONValue[]}
           onQuerySelect={onQuerySelect}
