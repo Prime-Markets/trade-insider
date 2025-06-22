@@ -217,7 +217,7 @@ export function ChatMessages({
                 {/* Show streaming spinner between assistant messages */}
                 {showStreamingSpinner && messageIndex === section.assistantMessages.length - 1 && (
                   <div className="flex justify-center py-2">
-                    <Spinner size="sm" />
+                    <Spinner/>
                   </div>
                 )}
               </div>
