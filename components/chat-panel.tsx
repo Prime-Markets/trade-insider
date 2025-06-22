@@ -3,7 +3,7 @@ import { Model } from '@/lib/types/models'
 import { cn } from '@/lib/utils'
 import { Message } from 'ai'
 import { ArrowUp, ChevronDown, MessageCirclePlus, Square } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useArtifact } from './artifact/artifact-context'
@@ -67,6 +67,32 @@ function useSearchTracker() {
   }
 }
 
+// Custom hook for URL query handling
+function useUrlQuery() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const [urlQuery, setUrlQuery] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Get query from URL parameters (you can customize the parameter name)
+    const query = searchParams.get('q') || searchParams.get('query')
+    if (query) {
+      setUrlQuery(query)
+    }
+  }, [searchParams])
+
+  const clearUrlQuery = () => {
+    // Remove query parameter from URL without page reload
+    const url = new URL(window.location.href)
+    url.searchParams.delete('q')
+    url.searchParams.delete('query')
+    router.replace(url.pathname + (url.search ? url.search : ''), { scroll: false })
+    setUrlQuery(null)
+  }
+
+  return { urlQuery, clearUrlQuery }
+}
+
 interface ChatPanelProps {
   input: string
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
@@ -109,6 +135,7 @@ export function ChatPanel({
   const [enterDisabled, setEnterDisabled] = useState(false) // Disable Enter after composition ends
   const { close: closeArtifact } = useArtifact()
   const { searchCount, isTrialExpired, trackSearch, remainingSearches } = useSearchTracker()
+  const { urlQuery, clearUrlQuery } = useUrlQuery()
 
   const handleCompositionStart = () => setIsComposing(true)
   const handleCompositionEnd = () => {
@@ -122,6 +149,7 @@ export function ChatPanel({
   const handleNewChat = () => {
     setMessages([])
     closeArtifact()
+    clearUrlQuery() // Clear URL query when starting new chat
     router.push('/')
   }
 
@@ -149,6 +177,11 @@ export function ChatPanel({
       }
     }
 
+    // Clear URL query when submitting
+    if (urlQuery) {
+      clearUrlQuery()
+    }
+
     // Call the original submit handler
     handleSubmit(e)
   }
@@ -163,11 +196,26 @@ export function ChatPanel({
       }
     }
 
+    // Clear URL query when appending message
+    if (urlQuery) {
+      clearUrlQuery()
+    }
+
     // Call the original append function
     append(message)
   }
 
-  // if query is not empty, submit the query
+  // Handle URL query - auto-fill textarea and optionally auto-submit
+  useEffect(() => {
+    if (urlQuery && input === '') {
+      // Fill the textarea with the URL query
+      handleInputChange({
+        target: { value: urlQuery }
+      } as React.ChangeEvent<HTMLTextAreaElement>)
+    }
+  }, [urlQuery, input, handleInputChange])
+
+  // if query prop is not empty, submit the query (existing functionality)
   useEffect(() => {
     if (isFirstRender.current && query && query.trim().length > 0) {
       handleAppend({
@@ -178,6 +226,21 @@ export function ChatPanel({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query])
+
+  // Auto-submit URL query (optional - remove if you only want to fill textarea)
+  useEffect(() => {
+    if (isFirstRender.current && urlQuery && urlQuery.trim().length > 0 && messages.length === 0) {
+      // Wait a bit to ensure the input is filled first
+      setTimeout(() => {
+        handleAppend({
+          role: 'user',
+          content: urlQuery
+        })
+      }, 100)
+      isFirstRender.current = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlQuery])
 
   // Scroll to the bottom of the container
   const handleScrollToBottom = () => {
