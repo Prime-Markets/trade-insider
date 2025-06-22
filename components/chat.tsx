@@ -11,9 +11,8 @@ import { toast } from 'sonner'
 import { ChatMessages } from './chat-messages'
 import { ChatPanel } from './chat-panel'
 import { PrintButton } from './Print'
-// Define section structure
 interface ChatSection {
-  id: string // User message ID
+  id: string
   userMessage: Message
   assistantMessages: Message[]
 }
@@ -58,20 +57,17 @@ export function Chat({
     onError: error => {
       toast.error(`Error in chat: ${error.message}`)
     },
-    sendExtraMessageFields: false, // Disable extra message fields,
+    sendExtraMessageFields: false, 
     experimental_throttle: 100
   })
 
   const isLoading = status === 'submitted' || status === 'streaming'
-
-  // Convert messages array to sections array
   const sections = useMemo<ChatSection[]>(() => {
     const result: ChatSection[] = []
     let currentSection: ChatSection | null = null
 
     for (const message of messages) {
       if (message.role === 'user') {
-        // Start a new section when a user message is found
         if (currentSection) {
           result.push(currentSection)
         }
@@ -81,13 +77,10 @@ export function Chat({
           assistantMessages: []
         }
       } else if (currentSection && message.role === 'assistant') {
-        // Add assistant message to the current section
         currentSection.assistantMessages.push(message)
       }
-      // Ignore other role types like 'system' for now
     }
 
-    // Add the last section if exists
     if (currentSection) {
       result.push(currentSection)
     }
@@ -95,7 +88,6 @@ export function Chat({
     return result
   }, [messages])
 
-  // Detect if scroll container is at the bottom
   useEffect(() => {
     const container = scrollContainerRef.current
     if (!container) return
@@ -111,17 +103,14 @@ export function Chat({
     }
 
     container.addEventListener('scroll', handleScroll, { passive: true })
-    handleScroll() // Set initial state
+    handleScroll() 
 
     return () => container.removeEventListener('scroll', handleScroll)
   }, [])
-
-  // Scroll to the section when a new user message is sent
   useEffect(() => {
     if (sections.length > 0) {
       const lastMessage = messages[messages.length - 1]
       if (lastMessage && lastMessage.role === 'user') {
-        // If the last message is from user, find the corresponding section
         const sectionId = lastMessage.id
         requestAnimationFrame(() => {
           const sectionElement = document.getElementById(`section-${sectionId}`)
@@ -233,7 +222,6 @@ export function Chat({
         scrollContainerRef={scrollContainerRef}
       />
         
-        {/* <PrintButton chatId={id}/> */}
     </div>
   )
 }

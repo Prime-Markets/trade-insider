@@ -97,7 +97,7 @@ export function SharenetChart({
   const [chartData, setChartData] = useState<TimeSeriesData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [timeframe, setTimeframe] = useState('30D');
+  const [timeframe, setTimeframe] = useState('1Y');
 
   const fetchTimeSeriesData = async () => {
     try {
@@ -685,9 +685,6 @@ export function SharenetMarketData({
       </div>
       <div className={`p-4 border-t ${borderColor} ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}>
         <div className="flex items-center justify-between text-xs">
-          <span className={mutedTextColor}>
-            Data provided by Sharenet
-          </span>
           <span className={mutedTextColor}>
             Last updated: {new Date().toLocaleTimeString()}
           </span>

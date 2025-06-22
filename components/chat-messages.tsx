@@ -42,10 +42,35 @@ export function ChatMessages({
   reload
 }: ChatMessagesProps) {
   const [openStates, setOpenStates] = useState<Record<string, boolean>>({})
+  const [loadingStartTime, setLoadingStartTime] = useState<number | null>(null)
+  const [showExtendedLoading, setShowExtendedLoading] = useState(false)
   const manualToolCallId = 'manual-tool-call'
 
+  // Track when loading starts to show extended loading for widgets
   useEffect(() => {
-    // Open manual tool call when the last section is a user message
+    if (isLoading && !loadingStartTime) {
+      setLoadingStartTime(Date.now())
+      setShowExtendedLoading(true)
+    } else if (!isLoading) {
+      // Keep loading visible for at least 2 seconds to allow widgets to load
+      if (loadingStartTime) {
+        const elapsed = Date.now() - loadingStartTime
+        const minLoadingTime = 2000 // 2 seconds minimum
+        
+        if (elapsed < minLoadingTime) {
+          setTimeout(() => {
+            setShowExtendedLoading(false)
+            setLoadingStartTime(null)
+          }, minLoadingTime - elapsed)
+        } else {
+          setShowExtendedLoading(false)
+          setLoadingStartTime(null)
+        }
+      }
+    }
+  }, [isLoading, loadingStartTime])
+
+  useEffect(() => {
     if (sections.length > 0) {
       const lastSection = sections[sections.length - 1]
       if (lastSection.userMessage.role === 'user') {
@@ -54,7 +79,6 @@ export function ChatMessages({
     }
   }, [sections])
 
-  // get last tool data for manual tool call
   const lastToolData = useMemo(() => {
     if (!data || !Array.isArray(data) || data.length === 0) return null
 
@@ -80,8 +104,7 @@ export function ChatMessages({
   }, [data])
 
   if (!sections.length) return null
-
-  // Get all messages as a flattened array
+  
   const allMessages = sections.flatMap(section => [
     section.userMessage,
     ...section.assistantMessages
@@ -92,11 +115,15 @@ export function ChatMessages({
     1 -
     [...allMessages].reverse().findIndex(msg => msg.role === 'user')
 
-  // Check if loading indicator should be shown
-  const showLoading =
-    isLoading &&
+  // Show loading if actively loading OR during extended loading period
+  const showLoading = (isLoading || showExtendedLoading) &&
     sections.length > 0 &&
     sections[sections.length - 1].assistantMessages.length === 0
+
+  // Show spinner between messages during streaming
+  const showStreamingSpinner = isLoading && 
+    sections.length > 0 && 
+    sections[sections.length - 1].assistantMessages.length > 0
 
   const getIsOpen = (id: string) => {
     if (id.includes('call')) {
@@ -114,19 +141,14 @@ export function ChatMessages({
     }))
   }
 
-  // Helper function to determine if a message is complete
   const isMessageComplete = (message: Message, sectionIndex: number, messageIndex: number) => {
-    // If not loading, all messages are complete
     if (!isLoading) return true
     
-    // If this is not the last section, the message is complete
     if (sectionIndex < sections.length - 1) return true
     
-    // If this is the last section but not the last assistant message, it's complete
     const lastSection = sections[sections.length - 1]
     if (messageIndex < lastSection.assistantMessages.length - 1) return true
     
-    // The last assistant message in the last section is incomplete if we're loading
     return false
   }
 
@@ -153,7 +175,6 @@ export function ChatMessages({
                 : {}
             }
           >
-            {/* User message */}
             <div className="flex flex-col gap-4 mb-4">
               <RenderMessage
                 message={section.userMessage}
@@ -165,12 +186,19 @@ export function ChatMessages({
                 addToolResult={addToolResult}
                 onUpdateMessage={onUpdateMessage}
                 reload={reload}
-                isComplete={true} // User messages are always complete
+                isComplete={true}
+                userQuery={typeof section.userMessage.content === 'string' ? section.userMessage.content : ''}
               />
-              {showLoading && <Spinner />}
+              {showLoading && (
+                <div className="flex flex-col items-center gap-2 py-4">
+                  <Spinner />
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Loading charts and market data...
+                  </p>
+                </div>
+              )}
             </div>
 
-            {/* Assistant messages */}
             {section.assistantMessages.map((assistantMessage, messageIndex) => (
               <div key={assistantMessage.id} className="flex flex-col gap-4">
                 <RenderMessage
@@ -184,7 +212,14 @@ export function ChatMessages({
                   onUpdateMessage={onUpdateMessage}
                   reload={reload}
                   isComplete={isMessageComplete(assistantMessage, sectionIndex, messageIndex)}
+                  userQuery={typeof section.userMessage.content === 'string' ? section.userMessage.content : ''}
                 />
+                {/* Show streaming spinner between assistant messages */}
+                {showStreamingSpinner && messageIndex === section.assistantMessages.length - 1 && (
+                  <div className="flex justify-center py-2">
+                    <Spinner size="sm" />
+                  </div>
+                )}
               </div>
             ))}
           </div>

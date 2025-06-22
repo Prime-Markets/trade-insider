@@ -21,7 +21,8 @@ interface RenderMessageProps {
     options?: ChatRequestOptions
   ) => Promise<string | null | undefined>
   isComplete?: boolean
-  theme?: 'light' | 'dark' 
+  theme?: 'light' | 'dark'
+  userQuery?: string // Optional: the original user question for early detection
 }
 
 export function RenderMessage({
@@ -35,7 +36,8 @@ export function RenderMessage({
   onUpdateMessage,
   reload,
   isComplete = true,
-  theme = 'light'
+  theme = 'light',
+  userQuery
 }: RenderMessageProps) {
   const relatedQuestions = useMemo(
     () =>
@@ -55,6 +57,11 @@ export function RenderMessage({
       .map(part => (part as any).text)
       .join(' ') || ''
   }, [message])
+
+  // Stable content for widget detection - prioritize user query to prevent re-renders
+  const widgetContent = useMemo(() => {
+    return userQuery || fullTextContent
+  }, [userQuery, fullTextContent])
 
   const toolData = useMemo(() => {
     const toolAnnotations =
@@ -121,17 +128,19 @@ export function RenderMessage({
 
   return (
     <>
-      {/* Show JSE widgets first for the entire message content */}
-      {isComplete && (
-        <JSEWidgetSection content={fullTextContent} theme={theme} />
+      {/* Show JSE widgets early - use stable content to prevent re-renders */}
+      {widgetContent && (
+        <JSEWidgetSection 
+          key={`widgets-${messageId}`}
+          content={widgetContent} 
+          theme={theme} 
+        />
       )}
-
-      {/* Filter out tool-invocation parts and render only text and reasoning */}
+      
       {message.parts?.map((part, index) => {
         const isLastPart = index === (message.parts?.length ?? 0) - 1
         switch (part.type) {
           case 'tool-invocation':
-            // Skip tool invocations here - they'll be rendered at the end
             return null
           case 'text':
             return (
