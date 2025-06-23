@@ -152,7 +152,7 @@ const getContactLink = (name: string): string => {
 
 const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [activeMenu, setActiveMenu] = useState<'trade' | 'resources' | 'about' | 'accounts' | ''>('');
   const [activeMenuMobile, setActiveMenuMobile] = useState<string | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -164,7 +164,7 @@ const Navbar: React.FC = () => {
     if (type === 'mobile') {
       setActiveMenuMobile(prev => (prev === key ? null : key));
     } else {
-      setActiveMenu(prev => (prev === key ? null : key));
+      setActiveMenu(prev => (prev === key ? '' : key as '' | 'trade' | 'resources' | 'about' | 'accounts'));
     }
   };
 
@@ -189,7 +189,7 @@ const Navbar: React.FC = () => {
     
     window.open(`https://prime.primemarkets.co.za/${path}`, '_blank');
     setIsMobileMenuOpen(false);
-    setActiveMenu(null);
+    setActiveMenu('');
     setActiveMenuMobile(null);
   };
 
@@ -197,7 +197,7 @@ const Navbar: React.FC = () => {
 
   const handleClickOutside = (e: MouseEvent): void => {
     if (navRef.current && !navRef.current.contains(e.target as Node)) {
-      setActiveMenu(null);
+      setActiveMenu('');
     }
   };
 
@@ -424,7 +424,7 @@ const Navbar: React.FC = () => {
                     </div>
                   ))}
                   {/* indicator */}
-                  {activeMenu === 'about' && (
+                  {activeMenu  === 'about' && (
                     <div className="p-4 border-b md:border-r border-gray-300 w-full md:w-[500px]">
                       <h3 className="text-gray-900 font-semibold text-lg mb-3">Location</h3>
                       <iframe
