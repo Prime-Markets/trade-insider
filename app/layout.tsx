@@ -10,7 +10,8 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Inter as FontSans } from 'next/font/google'
 import './globals.css'
-
+import FooterComponent from '@/components/footer'
+import Navbar from '@/components/navbar'
 const fontSans = FontSans({
   subsets: ['latin'],
   variable: '--font-sans'
@@ -74,6 +75,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <Navbar />
           <SidebarProvider defaultOpen={!!user}>
             {user && <AppSidebar />}
             <div className="flex flex-col flex-1">
@@ -83,6 +85,7 @@ export default async function RootLayout({
               </main>
             </div>
           </SidebarProvider>
+          <FooterComponent />
           <Toaster />
           <Analytics />
         </ThemeProvider>
